@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Halcyon Reach — a solo-pilot space MMO</title>
+<meta name="description" content="A 2D solo-pilot space MMO. An empire held this space once; now it's just you, one ship, and the people who stayed. Fly out alone, read the dark, live or die by what you chose to bring.">
+<meta property="og:title" content="Halcyon Reach">
+<meta property="og:description" content="An empire held this space once. Now it's just you, one ship, and the people who stayed.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#070b14">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:       #070b14;
+  --ink:        #0a1322;
+  --indigo:     #15233c;
+  --cloud:      #294b78;
+  --steel:      #88aeda;
+  --steel-dim:  #5d7ea8;
+  --amber:      #f4a648;
+  --amber-deep: #c46422;
+  --chalk:      #efe6d4;
+  --chalk-dim:  #a4b4c9;
+  --mute:       #61728c;
+  --line:       rgba(136, 174, 218, 0.16);
+  --line-soft:  rgba(136, 174, 218, 0.09);
+  --disp: 'Bricolage Grotesque', sans-serif;
+  --sans: 'Hanken Grotesk', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--void);
+  color: var(--chalk);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* ============ ATMOSPHERE ============ */
+.sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.sky .neb {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 62% 30%, rgba(41, 75, 120, 0.60) 0%, transparent 58%),
+    radial-gradient(ellipse 80% 65% at 24% 64%, rgba(20, 44, 78, 0.55) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 88% 78%, rgba(50, 40, 70, 0.40) 0%, transparent 55%),
+    linear-gradient(155deg, #0a1424 0%, #080f1c 50%, #060a12 100%);
+}
+.sky .clouds {
+  position: absolute; inset: -8%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='700' height='700'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.010 0.016' numOctaves='4' seed='11'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.32  0 0 0 0 0.56  0 0 0 0.9 0'/></filter><rect width='700' height='700' filter='url(%23n)'/></svg>");
+  background-size: cover; mix-blend-mode: screen; opacity: 0.42;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 60% 38%, black 0%, transparent 72%);
+          mask-image: radial-gradient(ellipse 80% 70% at 60% 38%, black 0%, transparent 72%);
+  animation: drift 90s linear infinite alternate;
+}
+@keyframes drift { from { transform: translate3d(-1.5%, -1%, 0) scale(1.04); } to { transform: translate3d(1.5%, 1%, 0) scale(1.08); } }
+.sky .grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 65% at 60% 45%, rgba(0,0,0,0.5) 0%, transparent 70%);
+          mask-image: radial-gradient(ellipse 70% 65% at 60% 45%, rgba(0,0,0,0.5) 0%, transparent 70%);
+}
+.sky .stars {
+  position: absolute; inset: 0; opacity: 0.8;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='500'><g fill='white'><circle cx='40' cy='60' r='0.8'/><circle cx='130' cy='200' r='1'/><circle cx='300' cy='90' r='0.7'/><circle cx='420' cy='160' r='1.1'/><circle cx='240' cy='320' r='0.8'/><circle cx='460' cy='400' r='0.7'/><circle cx='80' cy='420' r='1'/><circle cx='360' cy='270' r='0.6'/><circle cx='190' cy='460' r='0.9'/><circle cx='470' cy='40' r='0.7'/><circle cx='20' cy='250' r='0.6'/><circle cx='150' cy='30' r='0.8'/></g></svg>");
+  background-size: 500px 500px;
+  animation: twinkle 5s ease-in-out infinite alternate;
+}
+@keyframes twinkle { from { opacity: 0.45; } to { opacity: 0.9; } }
+.vignette { position: fixed; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(ellipse 100% 90% at 60% 45%, transparent 50%, rgba(4, 7, 13, 0.9) 100%); }
+.grain { position: fixed; inset: 0; z-index: 4; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23g)'/></svg>"); }
+
+/* ============ CHROME (nav) ============ */
+.shell { position: relative; z-index: 5; }
+.util {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px clamp(20px, 4vw, 56px);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  color: var(--mute); text-transform: uppercase;
+  border-bottom: 1px solid var(--line-soft);
+}
+.util a { color: var(--mute); text-decoration: none; transition: color .15s; }
+.util a:hover { color: var(--steel); }
+.util .sep { opacity: 0.4; margin: 0 4px; }
+
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px clamp(20px, 4vw, 56px);
+  gap: 24px;
+}
+.brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.sigil { width: 26px; height: 26px; display: block; filter: drop-shadow(0 0 6px rgba(136,174,218,0.4)); }
+.brand .name { font-family: var(--disp); font-weight: 800; font-size: 17px; letter-spacing: 0.01em; }
+.brand .name .r { color: var(--steel); }
+
+.pills {
+  display: flex; align-items: center; gap: 2px;
+  background: rgba(13, 22, 38, 0.55); backdrop-filter: blur(8px);
+  border: 1px solid var(--line); border-radius: 999px; padding: 5px;
+}
+.pills a {
+  font-size: 13.5px; letter-spacing: 0.02em; color: var(--chalk-dim);
+  text-decoration: none; padding: 8px 17px; border-radius: 999px;
+  transition: color .15s, background .15s;
+}
+.pills a:hover { color: var(--chalk); }
+.pills a.on {
+  color: var(--void); font-weight: 600;
+  background: linear-gradient(180deg, var(--steel), var(--steel-dim));
+  box-shadow: 0 2px 16px rgba(136,174,218,0.35);
+}
+.cta {
+  flex-shrink: 0; font-family: var(--sans); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--void);
+  text-decoration: none; padding: 11px 22px; border-radius: 999px;
+  background: linear-gradient(180deg, #ffd089, var(--amber));
+  box-shadow: 0 4px 22px rgba(244,166,72,0.3);
+  transition: transform .15s, box-shadow .15s;
+}
+.cta:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(244,166,72,0.45); }
+
+/* ============ HERO ============ */
+.hero {
+  position: relative; z-index: 5;
+  height: calc(100vh - 112px); min-height: 560px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+
+/* the planet */
+.stage { position: absolute; inset: 0; display: grid; place-items: center; padding-bottom: 13vh; z-index: 1; }
+.planet-wrap { position: relative; animation: float 14s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+.star-bloom {
+  position: absolute; top: 6%; right: -6%; width: 56%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,246,230,0.95) 0%, rgba(244,166,72,0.55) 22%, rgba(196,100,34,0.18) 45%, transparent 70%);
+  filter: blur(6px); z-index: 0; animation: bloom 6s ease-in-out infinite alternate;
+}
+@keyframes bloom { from { opacity: 0.8; transform: scale(0.98); } to { opacity: 1; transform: scale(1.05); } }
+.planet {
+  position: relative; z-index: 1;
+  width: clamp(300px, 44vmin, 560px); aspect-ratio: 1; border-radius: 50%;
+  background:
+    radial-gradient(circle at 70% 30%, #2e4a72 0%, #1b2d4a 28%, #0d1828 52%, #080e1a 74%, #060a14 100%);
+  box-shadow:
+    inset -36px -28px 90px rgba(3,6,12,0.85),
+    inset 22px 16px 60px rgba(244,166,72,0.05),
+    0 0 120px rgba(20,40,72,0.55);
+  overflow: hidden;
+}
+.planet .limb {  /* warm lit crescent toward the star */
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 84% 18%, rgba(255,206,140,0.85) 0%, rgba(244,166,72,0.35) 9%, rgba(196,100,34,0.10) 20%, transparent 34%);
+  mix-blend-mode: screen;
+}
+.planet .surface {
+  position: absolute; inset: 0; border-radius: 50%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.018 0.03' numOctaves='5' seed='4'/><feColorMatrix values='0 0 0 0 0.30  0 0 0 0 0.36  0 0 0 0 0.5  0 0 0 0.8 0'/></filter><rect width='400' height='400' filter='url(%23p)'/></svg>");
+  background-size: 150% 150%;
+  mix-blend-mode: soft-light; opacity: 0.5;
+  -webkit-mask-image: radial-gradient(circle at 64% 36%, black 0%, rgba(0,0,0,0.5) 40%, transparent 72%);
+          mask-image: radial-gradient(circle at 64% 36%, black 0%, rgba(0,0,0,0.5) 40%, transparent 72%);
+  animation: spin 120s linear infinite;
+}
+@keyframes spin { from { background-position: 0% 0%; } to { background-position: 150% 0%; } }
+.planet .atmo {  /* cool rim light on the lit side */
+  position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: inset 6px 5px 26px rgba(136,174,218,0.22), inset -2px -2px 12px rgba(8,14,26,0.6);
+}
+
+/* lone vessel + trajectory */
+.trajectory { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.trail {
+  position: absolute; top: 50%; left: 50%;
+  width: 2px; height: 150%;
+  transform: translate(-50%, -50%) rotate(34deg);
+  background: linear-gradient(to bottom, transparent 0%, rgba(136,174,218,0.0) 12%, rgba(136,174,218,0.55) 48%, rgba(239,230,212,0.0) 100%);
+}
+.ship {
+  position: absolute; top: 26%; left: 64%;
+  width: 0; height: 0;
+  border-left: 6px solid transparent; border-right: 6px solid transparent;
+  border-bottom: 15px solid var(--chalk);
+  transform: rotate(146deg);
+  filter: drop-shadow(0 0 7px rgba(136,174,218,0.9));
+  animation: sail 18s ease-in-out infinite alternate;
+}
+@keyframes sail { from { top: 24%; left: 63%; } to { top: 40%; left: 51%; } }
+
+/* sensor callout — the "visible math" identity */
+.callout { position: absolute; top: 30%; right: 16%; z-index: 3; pointer-events: none; }
+.callout .mark {
+  position: absolute; left: -8px; top: 14px; width: 13px; height: 13px;
+  border: 1px solid var(--amber); transform: rotate(45deg);
+  box-shadow: 0 0 10px rgba(244,166,72,0.6); animation: ping 2.6s ease-out infinite;
+}
+@keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(244,166,72,0.5); } 70%,100% { box-shadow: 0 0 0 10px rgba(244,166,72,0); } }
+.callout .lead {
+  position: absolute; left: 8px; top: 20px; width: 92px; height: 1px;
+  background: linear-gradient(90deg, var(--amber), var(--line));
+  transform-origin: left center; animation: draw 1s .8s both ease-out;
+}
+@keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.callout .tag {
+  margin-left: 100px; padding: 7px 11px;
+  background: rgba(10, 18, 32, 0.72); backdrop-filter: blur(6px);
+  border: 1px solid var(--line); border-left: 2px solid var(--amber);
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.5; white-space: nowrap;
+  animation: fadein 0.6s 1.5s both;
+}
+.callout .tag .k { color: var(--chalk); letter-spacing: 0.08em; }
+.callout .tag .v { color: var(--amber); }
+.callout .tag .d { color: var(--mute); }
+
+/* hero copy */
+.copy { position: relative; z-index: 4; text-align: center; padding: 0 20px; margin-top: auto; margin-bottom: 7vh; }
+.eyebrow {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.34em; text-transform: uppercase;
+  color: var(--steel); margin-bottom: 16px;
+}
+.copy h1 {
+  font-family: var(--disp); font-weight: 800;
+  font-size: clamp(48px, 8.5vw, 116px); line-height: 0.92; letter-spacing: -0.015em;
+  text-shadow: 0 0 70px rgba(20,40,72,0.9), 0 2px 30px rgba(0,0,0,0.6);
+}
+.copy h1 .r { color: var(--steel); }
+.copy .sub {
+  margin: 20px auto 0; max-width: 46ch;
+  font-size: clamp(15px, 1.6vw, 19px); line-height: 1.55; color: var(--chalk-dim);
+}
+.copy .sub em { color: var(--chalk); font-style: normal; }
+
+/* scroll cue */
+.scroll { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 5;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--mute); }
+.scroll .mouse { width: 22px; height: 34px; border: 1.5px solid var(--line); border-radius: 12px; position: relative; }
+.scroll .mouse::after { content: ''; position: absolute; top: 6px; left: 50%; width: 3px; height: 6px; border-radius: 2px;
+  background: var(--steel); transform: translateX(-50%); animation: wheel 1.8s ease-in-out infinite; }
+@keyframes wheel { 0% { opacity: 0; transform: translate(-50%, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, 10px); } }
+.scroll span { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+/* carousel arrows */
+.arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 6;
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line);
+  background: rgba(10,18,32,0.5); backdrop-filter: blur(6px);
+  display: grid; place-items: center; color: var(--chalk-dim); cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.arrow:hover { border-color: var(--steel); color: var(--chalk); background: rgba(20,38,66,0.6); }
+.arrow.l { left: clamp(14px, 3vw, 40px); }
+.arrow.r { right: clamp(14px, 3vw, 40px); }
+.arrow svg { width: 16px; height: 16px; }
+
+/* corner cards */
+.card {
+  position: absolute; bottom: 30px; z-index: 6; width: clamp(230px, 24vw, 290px);
+  background: rgba(10, 18, 32, 0.62); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  transition: transform .18s, border-color .18s, box-shadow .18s;
+}
+.card:hover { transform: translateY(-4px); border-color: var(--steel-dim); box-shadow: 0 12px 40px rgba(0,0,0,0.45); }
+.card.l { left: clamp(16px, 3vw, 40px); }
+.card.r { right: clamp(16px, 3vw, 40px); }
+.card .thumb { height: 96px; position: relative; display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(ellipse at 60% 30%, #20406c 0%, #0d1830 70%); }
+.card.l .thumb { background: radial-gradient(ellipse at 30% 40%, #213a5e 0%, #0c1626 75%); }
+.card .thumb .ministar { position: absolute; inset: 0;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='100'><g fill='white' opacity='0.7'><circle cx='30' cy='20' r='0.7'/><circle cx='120' cy='60' r='0.8'/><circle cx='170' cy='30' r='0.6'/><circle cx='80' cy='80' r='0.7'/></g></svg>"); }
+.card .thumb .hull {
+  width: 70%; height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--chalk) 30%, var(--chalk) 70%, transparent);
+  box-shadow: 0 0 14px rgba(136,174,218,0.5); transform: rotate(-12deg);
+  position: relative;
+}
+.card .thumb .hull::before { content: ''; position: absolute; right: -2px; top: -3px; width: 0; height: 0;
+  border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 12px solid var(--chalk); }
+.card .thumb .play { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
+  background: rgba(10,18,32,0.55); display: grid; place-items: center; }
+.card .thumb .play::after { content: ''; width: 0; height: 0; margin-left: 3px;
+  border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 10px solid var(--chalk); }
+.card .thumb .tagline { position: absolute; top: 9px; left: 11px; font-family: var(--mono);
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--steel); }
+.card .body { padding: 13px 15px 15px; }
+.card .body h3 { font-family: var(--disp); font-weight: 700; font-size: 15px; line-height: 1.2; margin-bottom: 9px; }
+.card .body a { font-size: 12px; letter-spacing: 0.04em; color: var(--amber); text-decoration: none; }
+.card .body a:hover { color: #ffce8c; }
+.card .body a .ar { transition: transform .15s; display: inline-block; }
+.card .body a:hover .ar { transform: translateX(3px); }
+
+/* ============ reveal ============ */
+.reveal { opacity: 0; transform: translateY(16px); animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes rise { to { opacity: 1; transform: translateY(0); } }
+.d1 { animation-delay: .05s; } .d2 { animation-delay: .18s; } .d3 { animation-delay: .34s; }
+.d4 { animation-delay: .5s; } .d5 { animation-delay: .66s; } .d6 { animation-delay: .82s; }
+
+@media (max-width: 880px) {
+  .pills, .util, .arrow, .card.r { display: none; }
+  .card.l { left: 50%; transform: translateX(-50%); right: auto; bottom: 18px; }
+  .planet { width: 78vw; }
+  .callout { right: 6%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="sky">
+  <div class="neb"></div>
+  <div class="clouds"></div>
+  <div class="grid"></div>
+  <div class="stars"></div>
+</div>
+
+<div class="shell">
+  <!-- utility row -->
+  <div class="util reveal d1">
+    <span>Halcyon Reach<span class="sep">·</span><span style="color:var(--steel)">Private Alpha</span></span>
+    <span><a href="#">Overview</a><span class="sep">/</span><a href="#">Press kit</a><span class="sep">/</span><a href="#">Support</a></span>
+  </div>
+
+  <!-- main nav -->
+  <nav class="nav reveal d2">
+    <div class="brand">
+      <svg class="sigil" viewBox="0 0 32 32"><path d="M4 6 H28 L16 17 Z M9 16 H23 L16 23 Z" fill="#88aeda"/></svg>
+      <span class="name">Halcyon <span class="r">Reach</span></span>
+    </div>
+    <div class="pills">
+      <a href="#" class="on">Game</a>
+      <a href="#">World</a>
+      <a href="#">Factions</a>
+      <a href="#">Economy</a>
+      <a href="#">Devlog</a>
+      <a href="#">Community</a>
+    </div>
+    <a class="cta" href="#">Request Access</a>
+  </nav>
+</div>
+
+<section class="hero">
+  <div class="stage">
+    <div class="planet-wrap reveal d3">
+      <div class="star-bloom"></div>
+      <div class="planet">
+        <div class="surface"></div>
+        <div class="limb"></div>
+        <div class="atmo"></div>
+      </div>
+      <div class="trajectory">
+        <div class="trail"></div>
+        <div class="ship"></div>
+      </div>
+      <div class="callout">
+        <div class="mark"></div>
+        <div class="lead"></div>
+        <div class="tag">
+          <div><span class="k">UNKNOWN CONTACT</span></div>
+          <div><span class="d">sig</span> <span class="v">0.42</span> <span class="d">· range</span> <span class="v">14.6 km</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow l reveal d5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 5l-7 7 7 7"/></svg></div>
+  <div class="arrow r reveal d5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 5l7 7-7 7"/></svg></div>
+
+  <div class="copy">
+    <p class="eyebrow reveal d3">2D solo-pilot space MMO</p>
+    <h1 class="reveal d4">Halcyon <span class="r">Reach</span></h1>
+    <p class="sub reveal d5">An empire held this space once. Now it's just you, one ship, and the people who stayed to keep the lights on. <em>Fly out alone, read the dark, and live or die by what you decided to bring.</em></p>
+  </div>
+
+  <!-- corner cards -->
+  <div class="card l reveal d6">
+    <div class="thumb"><div class="ministar"></div><span class="tagline">// the loop</span><div class="hull"></div></div>
+    <div class="body">
+      <h3>Lose the ship. Keep the pilot.</h3>
+      <a href="#">How loss works <span class="ar">→</span></a>
+    </div>
+  </div>
+  <div class="card r reveal d6">
+    <div class="thumb"><div class="ministar"></div><span class="tagline">// devlog 01</span><div class="play"></div></div>
+    <div class="body">
+      <h3>The wreck stays where it fell.</h3>
+      <a href="#">Read the journey <span class="ar">→</span></a>
+    </div>
+  </div>
+
+  <div class="scroll reveal d6"><div class="mouse"></div><span>Scroll</span></div>
+</section>
+
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<script>
+// Live version badge once the source repo (or its releases) is public.
+fetch('https://api.github.com/repos/halcyon-reach/halcyon-drift/releases/latest')
+  .then(r => r.ok ? r.json() : null)
+  .then(d => { if (d && d.tag_name) {
+    var u = document.querySelector('.util span'); if (u) u.innerHTML += ' <span class="sep">·</span>' + d.tag_name;
+  }})
+  .catch(() => {});
+</script>
+</body>
+</html>
